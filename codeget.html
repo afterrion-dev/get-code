@@ -1,0 +1,292 @@
+<!DOCTYPE html><html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GET Code Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #000;
+        color: #fff;
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    .galaxy-bg {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background: linear-gradient(180deg, #050505 0%, #0d0d0d 50%, #111 100%);
+    }
+
+    .stars, .particles {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+    }
+
+    .star, .particle {
+        position: absolute;
+        border-radius: 50%;
+    }
+
+    .star {
+        background: #fff;
+        animation: twinkle 3s infinite;
+    }
+
+    .particle {
+        background: rgba(0, 255, 255, 0.6);
+        box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+        animation: drift linear infinite;
+    }
+
+    @keyframes twinkle {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+    }
+
+    @keyframes drift {
+        0% { transform: translateY(0) translateX(0); opacity: 0; }
+        20% { opacity: 1; }
+        100% { transform: translateY(-100vh) translateX(40px); opacity: 0; }
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        position: relative;
+        z-index: 1;
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 3em;
+        margin-bottom: 30px;
+        background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+        from { filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5)); }
+        to { filter: drop-shadow(0 0 20px rgba(255, 0, 255, 0.5)); }
+    }
+
+    .input-section, .result-section {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.15);
+    }
+
+    .input-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    input[type="url"] {
+        flex: 1;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        color: #fff;
+        font-size: 16px;
+    }
+
+    button {
+        padding: 15px 30px;
+        background: linear-gradient(45deg, #00ffff, #ff00ff);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .loading { display: none; text-align: center; margin: 20px 0; }
+    .loading.active { display: block; }
+
+    .loader {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #00ffff;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result-section { display: none; position: relative; overflow: hidden; }
+    .result-section.active { display: block; }
+
+    .glowing-border {
+        position: absolute;
+        inset: -2px;
+        background: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff);
+        border-radius: 20px;
+        opacity: 0.3;
+        z-index: -1;
+        filter: blur(8px);
+    }
+
+    .result-meta {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .result-content {
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        padding: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .code-output {
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: #00ffff;
+    }
+
+    .copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 8px 16px;
+        background: rgba(0, 255, 255, 0.2);
+        border: 1px solid #00ffff;
+        border-radius: 5px;
+        color: #00ffff;
+        cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+        h1 { font-size: 2em; }
+        .input-group, .result-meta { flex-direction: column; }
+    }
+</style>
+
+</head>
+<body>
+    <div class="galaxy-bg"></div>
+    <div class="stars" id="stars"></div>
+    <div class="particles" id="particles"></div><div class="container">
+    <h1>Copy Paste Web By Rion</h1>
+
+    <div class="input-section">
+        <div class="input-group">
+            <input type="url" id="urlInput" placeholder="Masukkin URL-nya woi (wajib https://)" required>
+            <button onclick="generateCode()">Generate Code</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loader"></div>
+            <p style="margin-top:10px;color:rgba(255,255,255,.7)">Mengambil kode
+            dari penghitaman jmk...</p>
+        </div>
+    </div>
+
+    <div class="result-section" id="resultSection">
+        <div class="glowing-border"></div>
+        <div class="result-meta">
+            <span id="creator">Creator: Rion</span>
+            <span id="status">Status: -</span>
+        </div>
+        <div class="result-content">
+            <button class="copy-button" onclick="copyCode()">Salin Kode</button>
+            <pre class="code-output" id="codeOutput"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    function createStars() {
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+    }
+
+    function createParticles() {
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 3 + 2;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + '%';
+            p.style.animationDuration = (Math.random() * 10 + 8) + 's';
+            p.style.animationDelay = Math.random() * 5 + 's';
+            container.appendChild(p);
+        }
+    }
+
+    async function generateCode() {
+        const url = document.getElementById('urlInput').value.trim();
+        if (!url) return alert('Lu belum masukkin URL-nya dongok');
+        if (!url.startsWith('https://')) return alert('URL-nya https:// belum lu masukkin');
+
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+        loading.classList.add('active');
+        resultSection.classList.remove('active');
+
+        try {
+            const response = await fetch(`https://api.resellergaming.my.id/tools/getcode?url=${encodeURIComponent(url)}`);
+            const data = await response.json();
+
+            if (data.status) {
+                document.getElementById('creator').textContent = 'Creator: Rion';
+                document.getElementById('status').textContent = 'Status: Success';
+                document.getElementById('codeOutput').textContent = data.result.html;
+                resultSection.classList.add('active');
+            } else {
+                throw new Error('Failed');
+            }
+        } catch (e) {
+            alert('Terjadi kesalahan saat mengambil kode.');
+        } finally {
+            loading.classList.remove('active');
+        }
+    }
+
+    function copyCode() {
+        const text = document.getElementById('codeOutput').textContent;
+        navigator.clipboard.writeText(text);
+    }
+
+    createStars();
+    createParticles();
+</script>
+
+</body>
+  </html>
